@@ -36,7 +36,12 @@ const BrainstormChat = ({ title = "デザインアイデアブレストーミン
 
   // Figma integration states
   const [figmaFileUrl, setFigmaFileUrl] = useState("");
-  const [figmaContext, setFigmaContext] = useState<any>(null);
+  const [figmaContext, setFigmaContext] = useState<{
+    fileName: string;
+    fileId: string;
+    nodes: Record<string, unknown>;
+    metadata: Record<string, unknown>;
+  } | null>(null);
   const [loadingFigmaContext, setLoadingFigmaContext] = useState(false);
 
   // Helper function to extract Figma file ID from URL
@@ -68,7 +73,12 @@ const BrainstormChat = ({ title = "デザインアイデアブレストーミン
 
     setLoadingFigmaContext(true);
     try {
-      const result = await apiService.extractFigmaInsights(fileId) as any;
+      const result = await apiService.extractFigmaInsights(fileId) as {
+        fileName: string;
+        fileId: string;
+        nodes: Record<string, unknown>;
+        metadata: Record<string, unknown>;
+      };
       if (result.success && result.insights) {
         // Only store essential insights, not the full data
         const essentialInsights = {
@@ -239,9 +249,19 @@ const BrainstormChat = ({ title = "デザインアイデアブレストーミン
   };
 
   // Enhanced mock response with Figma context
-  const generateMockResponseWithFigma = (message: string, model: LanguageModel, figmaContext: any): string => {
+  const generateMockResponseWithFigma = (message: string, model: LanguageModel, figmaContext: {
+    fileName: string;
+    fileId: string;
+    nodes: Record<string, unknown>;
+    metadata: Record<string, unknown>;
+  } | null): string => {
     const baseResponse = generateMockResponse(message, model);
-    const insights = figmaContext.insights;
+    
+    if (!figmaContext) {
+      return baseResponse;
+    }
+    
+    const insights = figmaContext.metadata;
     
     let figmaAnalysis = "\n\n**Figmaデザイン分析に基づく提案:**\n\n";
     

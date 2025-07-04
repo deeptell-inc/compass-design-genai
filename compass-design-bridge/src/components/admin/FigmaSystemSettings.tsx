@@ -36,14 +36,11 @@ const FigmaSystemSettings = ({ isAdmin = false }: FigmaSystemSettingsProps) => {
   const [isCheckingSystem, setIsCheckingSystem] = useState(false);
   const [systemHealthy, setSystemHealthy] = useState<boolean | null>(null);
 
-  // Only show to admin users
-  if (!isAdmin) {
-    return null;
-  }
-
   useEffect(() => {
-    loadSystemStats();
-  }, []);
+    if (isAdmin) {
+      loadSystemStats();
+    }
+  }, [isAdmin]);
 
   const loadSystemStats = () => {
     // Mock data for demonstration
@@ -106,6 +103,11 @@ const FigmaSystemSettings = ({ isAdmin = false }: FigmaSystemSettingsProps) => {
       description: "Figma接続の詳細情報を表示する機能は開発中です",
     });
   };
+
+  // Only show to admin users
+  if (!isAdmin) {
+    return null;
+  }
 
   const formatLastCheck = (dateString: string | null) => {
     if (!dateString) return "未実行";
