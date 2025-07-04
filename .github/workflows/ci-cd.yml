@@ -26,13 +26,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: compass-design-bridge/package-lock.json
 
       - name: Install dependencies
         run: |
           cd compass-design-bridge
-          npm ci
+          npm install
 
       - name: Run linter
         run: |
@@ -62,13 +60,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: compass-design-bridge-server/package-lock.json
 
       - name: Install dependencies
         run: |
           cd compass-design-bridge-server
-          npm ci
+          npm install
 
       - name: Run linter
         run: |
@@ -97,8 +93,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -178,8 +172,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
