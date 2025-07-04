@@ -1,0 +1,6 @@
+[submodule "compass-design-bridge"]
+	path = compass-design-bridge
+	url = git@github.com:deeprecommend-inc/compass-design-bridge.git
+[submodule "compass-design-bridge-server"]
+	path = compass-design-bridge-server
+	url = git@github.com:deeprecommend-inc/compass-design-bridge-server.git
