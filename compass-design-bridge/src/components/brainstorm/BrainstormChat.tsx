@@ -46,7 +46,7 @@ const BrainstormChat = ({ title = "デザインアイデアブレストーミン
 
   // Helper function to extract Figma file ID from URL
   const extractFigmaFileId = (url: string): string | null => {
-    const match = url.match(/^https?:\/\/(?:www\.)?figma\.com\/(?:file|design|buzz)\/([a-zA-Z0-9_-]+)/);
+    const match = url.match(/^https?:\/\/(?:www\.)?figma\.com\/([a-zA-Z0-9_-]+)/);
     return match ? match[1] : null;
   };
 

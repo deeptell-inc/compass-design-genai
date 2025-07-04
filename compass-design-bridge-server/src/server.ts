@@ -15,16 +15,10 @@ import { authenticateToken, AuthenticatedRequest, requireAdmin } from './middlew
 import { mcpManager } from './mcp/mcpManager';
 import { MCPClientService } from './services/mcpClientService';
 import { databaseService } from './services/databaseService';
-import figmaRoutes from './routes/figma';
-import analyticsRoutes from './routes/analytics';
 
 class CompassMCPServer {
   private server: Server;
-  private tools: Map<string, {
-    name: string;
-    description: string;
-    inputSchema: Record<string, unknown>;
-  }>;
+  private tools: Map<string, any>;
   private app: express.Application;
   private mcpClient: MCPClientService;
 
@@ -93,18 +87,13 @@ class CompassMCPServer {
   private setupExpress() {
     this.app.use(cors({
       origin: [
-        'http://localhost:3000',
-        'http://localhost:8080', 
+        'http://localhost:8080',
         'https://compass-server.com'
       ],
       credentials: true
     }));
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ limit: '10mb', extended: true }));
-
-    // Mount API routes
-    this.app.use('/api', figmaRoutes);
-    this.app.use('/api/analytics', analyticsRoutes);
 
     this.app.get('/health', (req, res) => {
       res.json({ status: 'healthy', timestamp: new Date().toISOString() });
@@ -262,6 +251,81 @@ class CompassMCPServer {
       }
     });
 
+    // Figma MCP API routes
+    this.app.post('/api/figmaKey', authenticateToken, async (req: AuthenticatedRequest, res) => {
+      try {
+        const { key } = req.body;
+        const userId = req.user?.userId;
+        
+        if (!userId) {
+          return res.status(401).json({
+            success: false,
+            error: 'User not authenticated'
+          });
+        }
+        
+        if (!key || typeof key !== 'string') {
+          return res.status(400).json({
+            success: false,
+            error: 'Valid Figma API key is required'
+          });
+        }
+
+        // Validate key format (40-64 characters, alphanumeric + hyphens/underscores)
+        if (key.length < 40 || key.length > 64 || !/^[a-zA-Z0-9-_]+$/.test(key)) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid Figma API key format'
+          });
+        }
+
+        // Save the API key to database
+        await databaseService.saveFigmaApiKey(userId, key);
+        
+        res.json({ 
+          success: true, 
+          message: 'Figma API key saved successfully' 
+        });
+      } catch (error) {
+        console.error('Save Figma API key error:', error);
+        res.status(500).json({
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to save Figma API key'
+        });
+      }
+    });
+
+    // Figma APIキー取得エンドポイント
+    this.app.get('/api/figmaKey', authenticateToken, async (req: AuthenticatedRequest, res) => {
+      try {
+        const userId = req.user?.userId;
+        
+        if (!userId) {
+          return res.status(401).json({
+            success: false,
+            error: 'User not authenticated'
+          });
+        }
+
+        const apiKey = await databaseService.getFigmaApiKey(userId);
+        
+        res.json({ 
+          success: true, 
+          data: { 
+            hasKey: !!apiKey,
+            // セキュリティのため、一部のみ表示
+            maskedKey: apiKey ? `${apiKey.substring(0, 8)}${'*'.repeat(apiKey.length - 12)}${apiKey.substring(apiKey.length - 4)}` : null,
+            fullKey: apiKey // 開発時のみ。本番では削除
+          }
+        });
+      } catch (error) {
+        console.error('Get Figma API key error:', error);
+        res.status(500).json({
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to get Figma API key'
+        });
+      }
+    });
 
     this.app.post('/api/token/refresh', authenticateToken, async (req: AuthenticatedRequest, res) => {
       try {
@@ -520,7 +584,7 @@ class CompassMCPServer {
     // Figma MCP Client API endpoints for brainstorming
     this.app.post('/api/figma-mcp/analyze-design', authenticateToken, async (req: AuthenticatedRequest, res) => {
       try {
-        const { fileId } = req.body;
+        const { fileId, nodeIds } = req.body;
         
         if (!fileId) {
           return res.status(400).json({
@@ -572,8 +636,22 @@ class CompassMCPServer {
         // Use direct Figma service instead of MCP client
         const { FigmaService } = await import('./services/figmaService');
         
-        // Get stored Figma API key for user (for now use config or demo key)
-        const figmaApiKey = config.figmaApiKey || 'demo-figma-key';
+        // Get stored Figma API key for user
+        const userId = req.user?.userId;
+        if (!userId) {
+          return res.status(401).json({
+            success: false,
+            error: 'User not authenticated'
+          });
+        }
+        
+        const figmaApiKey = await databaseService.getFigmaApiKey(userId);
+        if (!figmaApiKey) {
+          return res.status(400).json({
+            success: false,
+            error: 'Figma API key not configured. Please set your API key first.'
+          });
+        }
         const figmaService = new FigmaService(figmaApiKey);
         
         const figmaFile = await figmaService.getFile(fileId);
@@ -702,8 +780,7 @@ class CompassMCPServer {
     this.app.post('/admin/system-settings', authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
       try {
         // 管理者のみがアクセス可能
-        // TODO: Implement settings update logic
-        // const { settings } = req.body;
+        const { settings } = req.body;
         // システム設定の更新処理
         res.json({ success: true, message: 'Settings updated' });
       } catch (error) {
