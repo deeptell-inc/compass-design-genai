@@ -1,0 +1,14 @@
+[
+  {
+    "user_id": "416ebbea-5f3b-415d-9e53-f3512430d8e8",
+    "email": "aaa@aaa",
+    "password_hash": "$2a$10$rsTATIqIdjfVmd4bI54.HuqV3rZOgzsy4TItLfzvCEOllGd0JpEou",
+    "created_at": "2025-06-13T04:54:50.651Z"
+  },
+  {
+    "user_id": "b6d68d37-98c7-4048-9222-be0eb9a9f887",
+    "email": "info@deeptell.jp",
+    "password_hash": "$2a$10$wR.dPxVi0mSwceHhzw9jsuV3w27FnGSf.UY19G/n11ZXiD9.8Woba",
+    "created_at": "2025-07-03T11:07:25.514Z"
+  }
+]
