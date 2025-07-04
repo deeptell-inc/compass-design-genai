@@ -20,7 +20,11 @@ import analyticsRoutes from './routes/analytics';
 
 class CompassMCPServer {
   private server: Server;
-  private tools: Map<string, any>;
+  private tools: Map<string, {
+    name: string;
+    description: string;
+    inputSchema: Record<string, unknown>;
+  }>;
   private app: express.Application;
   private mcpClient: MCPClientService;
 
@@ -516,7 +520,7 @@ class CompassMCPServer {
     // Figma MCP Client API endpoints for brainstorming
     this.app.post('/api/figma-mcp/analyze-design', authenticateToken, async (req: AuthenticatedRequest, res) => {
       try {
-        const { fileId, nodeIds } = req.body;
+        const { fileId } = req.body;
         
         if (!fileId) {
           return res.status(400).json({
@@ -698,7 +702,8 @@ class CompassMCPServer {
     this.app.post('/admin/system-settings', authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
       try {
         // 管理者のみがアクセス可能
-        const { settings } = req.body;
+        // TODO: Implement settings update logic
+        // const { settings } = req.body;
         // システム設定の更新処理
         res.json({ success: true, message: 'Settings updated' });
       } catch (error) {

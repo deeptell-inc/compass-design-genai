@@ -71,4 +71,4 @@ describe('AuthService', () => {
       expect(typeof token).toBe('string')
     })
   })
-}) 
+})
